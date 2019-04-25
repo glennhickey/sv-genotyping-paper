@@ -247,10 +247,10 @@ else
 	 OUT_NAME="${NAME}"
 	 if [ $GRAPH == "HGSVC" ]
 	 then
-		  CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --neg_control HG00514 --pangenome"
+		  CONTROLS="--pos_control HG00514 --haplo_sample HG00514 --pangenome"
 	 elif  [ $GRAPH == "CHMPD" ]
 	 then
-		  CONTROLS="--pos_control PSEUDOSET --haplo_sample PSEUDOSET --neg_control PSEUDOSET --pangenome"
+		  CONTROLS="--pos_control PSEUDOSET --haplo_sample PSEUDOSET  --pangenome"
 	 elif [[ $GRAPH =~ ^GIAB ]]
 	 then
 		  CONTROLS="--pos_control HG002 --pangenome"
