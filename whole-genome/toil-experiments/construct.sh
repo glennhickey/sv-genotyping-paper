@@ -259,13 +259,13 @@ fi
 
 if [ $GRAPH != "SVPOP" ] && [ $GRAPH != "GIAB-0.5" ] && [ $GRAPH != "GIAB-0.6" ]
 then
-	 INDEX_OPTS="--all_index"
+	 INDEX_OPTS="--all_index --xg_alts"
 	 if [ $NO_UNFOLD == 0 ]
 	 then
 		  INDEX_OPTS="${INDEX_OPTS} --gbwt_prune"
 	 fi
 else
-	 INDEX_OPTS="--xg_index --gcsa_index --id_ranges_index --snarls_index"
+	 INDEX_OPTS="--xg_index --xg_alts --gcsa_index --id_ranges_index --snarls_index"
 fi
 
 if [ $MIN_AF != 0 ]
@@ -281,6 +281,6 @@ fi
 INDEX_OPTS="${INDEX_OPTS} --alt_paths --alt_path_gam_index"
 
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS}  --out_name ${OUT_NAME} --flat_alts ${ALL_INDEX} ${CONTROLS} --normalize ${REGIONS} ${INDEX_OPTS} --merge_graphs --keep_vcfs --validate --handle_svs ${CONFIG_OPTS} --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee "construct.${OUT_NAME}-$(date).stdout"
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 50 -n i3.8xlarge:${BID},i3.8xlarge "construct aws:${REGION}:${JOBSTORE_NAME} aws:${REGION}:${OUTSTORE_NAME} --fasta ${FASTA} --vcf ${VCFS}  --out_name ${OUT_NAME} --flat_alts --alt_paths ${ALL_INDEX} ${CONTROLS} --normalize ${REGIONS} ${INDEX_OPTS} --merge_graphs --keep_vcfs --validate --handle_svs ${CONFIG_OPTS} --logFile construct.${OUT_NAME}.log ${RESTART_FLAG}" | tee "construct.${OUT_NAME}-$(date).stdout"
 
 aws s3 cp construct.${OUT_NAME}-$(date).stdout s3://${OUTSTORE_NAME}/
