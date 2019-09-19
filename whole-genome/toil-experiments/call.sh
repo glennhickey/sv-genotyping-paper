@@ -12,6 +12,10 @@ CONFIG_PATH=""
 HEAD_NODE=""
 RECALL=1
 CHR_PREFIX="chr"
+GENOTYPE_VCF=0
+ALT_PATH_GAM=0
+ID_RANGES_FILE=0 
+SNARLS_FILE=0
 
 usage() {
     # Print usage to stderr
@@ -31,10 +35,14 @@ usage() {
 	 printf "   -f      (local) Path of config file\n"
 	 printf "   -a      Augment the graph (do not use --recall mode)\n"
 	 printf "   -p      No chr prefix in chromosome names\n"
+	 printf "   -v FILE Genotype given VCF file\n"
+	 printf "   -i FILE Use given alt path gam index (required for -v)\n"
+	 printf "   -d FILE id ranges file (to enable pack support)\n"
+	 printf "   -l FILE snarls file\n"
     exit 1
 }
 
-while getopts "b:re:c:f:ap" o; do
+while getopts "b:re:c:f:apv:i:d:l:" o; do
     case "${o}" in
         b)
             BID=${OPTARG}
@@ -57,6 +65,18 @@ while getopts "b:re:c:f:ap" o; do
 				;;
 		  p)
 				CHR_PREFIX=""
+				;;
+		  v)
+				GENOTYPE_VCF=${OPTARG}
+				;;
+		  i)
+				ALT_PATH_GAM=${OPTARG}
+				;;
+		  d)
+				ID_RANGES_FILE=${OPTARG}
+				;;
+		  l)
+				SNARLS_FILE=${OPTARG}
 				;;
         *)
             usage
@@ -129,8 +149,28 @@ else
 	 RECALL_OPTS=""
 fi
 
+GT_OPTS=""
+if [ $GENOTYPE_VCF != 0 ]
+then
+	 GT_OPTS="--genotype_vcf ${GENOTYPE_VCF} ${GT_OPTS}"
+fi
+if [ $ALT_PATH_GAM != 0 ]
+then
+	 GT_OPTS="--alt_path_gam ${ALT_PATH_GAM} ${GT_OPTS}"
+fi
+
+PACK_OPTS=""
+if [ $ID_RANGES_FILE != 0 ]
+then
+	 PACK_OPTS="--id_ranges ${ID_RANGES_FILE} --pack"
+fi
+if [ $SNARLS_FILE != 0 ]
+then
+	 PACK_OPTS="--snarls ${SNARLS_FILE} ${PACK_OPTS}"
+fi
+
 # run the job
-./ec2-run.sh ${HEAD_NODE_OPTS} -m 20 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 22 -1 1; echo X; echo Y); do echo ${CHR_PREFIX}${i}; done) ${RECALL_OPTS} --logFile call.hgsvc.$(basename ${OUTSTORE_NAME}).log ${RESTART_FLAG}" | tee call.hgsvc.$(basename ${OUTSTORE_NAME}).stdout
+./ec2-run.sh ${HEAD_NODE_OPTS} -m 1 -n r3.8xlarge:${BID},r3.8xlarge "call aws:${REGION}:${JOBSTORE_NAME} ${XG_INDEX} ${SAMPLE} aws:${REGION}:${OUTSTORE_NAME} ${CONFIG_OPTS} ${GAM_OPTS} --chroms  $(for i in $(seq 22 -1 1; echo X; echo Y); do echo ${CHR_PREFIX}${i}; done) ${RECALL_OPTS} --logFile call.hgsvc.$(basename ${OUTSTORE_NAME}).log ${RESTART_FLAG} ${GT_OPTS} ${PACK_OPTS}" | tee call.$(basename ${OUTSTORE_NAME}).stdout
 
 TOIL_ERROR=!$
 

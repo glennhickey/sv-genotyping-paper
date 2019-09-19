@@ -11,6 +11,7 @@ MAP_OPTS=""
 CALL_OPTS=""
 EVAL_OPTS=""
 CHR_PREFIX="chr"
+TAG=""
 
 usage() {
     # Print usage to stderr
@@ -33,10 +34,11 @@ usage() {
 	 printf "   -C      options for call.sh in quotes (SKIP to skip)\n"
 	 printf "   -E      options for eval.sh in quotes (SKIP to skip)\n"
 	 printf "   -p      No chr prefix in chromosome names\n"
+	 printf "   -A      tag\n"
     exit 1
 }
 
-while getopts "b:c:M:C:E:p" o; do
+while getopts "b:c:M:C:E:pA:" o; do
     case "${o}" in
         b)
             HEAD_NODE_OPTS="${HEAD_NODE_OPTS} -b ${OPTARG}"
@@ -56,6 +58,9 @@ while getopts "b:c:M:C:E:p" o; do
 		  p)
 				CHR_PREFIX=""
 				;;		  
+		  A)
+				TAG="-${OPTARG}"
+				;;
         *)
             usage
             ;;
@@ -89,7 +94,7 @@ shift
 READS2="${1}"
 shift
 
-set -ex
+#set -ex
 
 if [ "${MAP_OPTS}" != "SKIP" ]
 then
@@ -98,10 +103,10 @@ fi
 
 if [ "${CALL_OPTS}" != "SKIP" ]
 then
-	 ./call.sh $HEAD_NODE_OPTS $CALL_OPTS $JOBSTORE_NAME "${OUTSTORE_NAME}/call-${NAME}" ${INDEX_BASE}.xg $SAMPLE "s3://${OUTSTORE_NAME}/map-${NAME}/${SAMPLE}_${CHR_PREFIX}"
+	 ./call.sh $HEAD_NODE_OPTS $CALL_OPTS $JOBSTORE_NAME "${OUTSTORE_NAME}/call-${NAME}${TAG}" ${INDEX_BASE}.xg $SAMPLE "s3://${OUTSTORE_NAME}/map-${NAME}/${SAMPLE}_${CHR_PREFIX}"
 fi
 
 if [ "${EVAL_OPTS}" != "SKIP" ]
 then
-	 ./eval.sh $HEAD_NODE_OPTS $EVAL_OPTS $JOBSTORE_NAME "$OUTSTORE_NAME/eval-${NAME}" $TRUE_VCF "s3://${OUTSTORE_NAME}/call-${NAME}/${SAMPLE}.vcf.gz" $REGIONS $SAMPLE
+	 ./eval.sh $HEAD_NODE_OPTS $EVAL_OPTS $JOBSTORE_NAME "$OUTSTORE_NAME/eval-${NAME}${TAG}" $TRUE_VCF "s3://${OUTSTORE_NAME}/call-${NAME}/${SAMPLE}.vcf.gz" $REGIONS $SAMPLE
 fi
